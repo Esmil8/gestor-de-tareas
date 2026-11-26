@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { createTask, deleteTask, getTasks, updateTask } from "./api.js";
-import TaskForm from "./components/TaskForm.jsx";
-import TaskList from "./components/TaskList.jsx";
-import { STATUSES, STATUS_LABELS } from "./statuses.js";
+import TaskForm from "./features/tasks/components/TaskForm.jsx";
+import TaskList from "./features/tasks/components/TaskList.jsx";
+import {
+  createTask,
+  deleteTask,
+  getTasks,
+  updateTask,
+} from "./features/tasks/tasks.api.js";
+import { STATUSES, STATUS_LABELS } from "./features/tasks/tasks.constants.js";
 
 export default function App() {
   const [tasks, setTasks] = useState([]);

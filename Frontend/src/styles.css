@@ -248,6 +248,27 @@ button:focus-visible {
   color: #1e7145;
 }
 
+.priority {
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-weight: 600;
+}
+
+.priority--alta {
+  background: #fdecee;
+  color: var(--danger);
+}
+
+.priority--media {
+  background: #fff4e5;
+  color: #915b09;
+}
+
+.priority--baja {
+  background: #e7f6ec;
+  color: #1e7145;
+}
+
 .task-actions {
   display: flex;
   flex-shrink: 0;
