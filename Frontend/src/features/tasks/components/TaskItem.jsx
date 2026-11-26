@@ -1,4 +1,4 @@
-import { STATUS_LABELS } from "../statuses.js";
+import { PRIORITY_LABELS, STATUS_LABELS } from "../tasks.constants.js";
 
 function formatDate(iso) {
   return new Intl.DateTimeFormat("es", {
@@ -17,6 +17,9 @@ export default function TaskItem({ task, onEdit, onDelete }) {
         <div className="task-meta">
           <span className={`status status--${task.status}`}>
             {STATUS_LABELS[task.status] || task.status}
+          </span>
+          <span className={`priority priority--${task.priority || "media"}`}>
+            Prioridad: {PRIORITY_LABELS[task.priority] || "Media"}
           </span>
           <span>Creada: {formatDate(task.createdAt)}</span>
         </div>
