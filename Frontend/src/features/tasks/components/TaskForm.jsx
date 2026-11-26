@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
-import { STATUSES, STATUS_LABELS } from "../statuses.js";
+import { PRIORITIES, PRIORITY_LABELS, STATUSES, STATUS_LABELS } from "../tasks.constants.js";
 
-const emptyTask = { title: "", description: "", status: "pendiente" };
+const emptyTask = {
+  title: "",
+  description: "",
+  status: "pendiente",
+  priority: "media",
+};
 
 export default function TaskForm({ editingTask, onSubmit, onCancel }) {
   const [values, setValues] = useState(emptyTask);
@@ -14,6 +19,7 @@ export default function TaskForm({ editingTask, onSubmit, onCancel }) {
             title: editingTask.title,
             description: editingTask.description,
             status: editingTask.status,
+            priority: editingTask.priority || "media",
           }
         : emptyTask
     );
@@ -82,6 +88,22 @@ export default function TaskForm({ editingTask, onSubmit, onCancel }) {
             {STATUSES.map((status) => (
               <option key={status} value={status}>
                 {STATUS_LABELS[status]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="field">
+          <label htmlFor="priority">Prioridad</label>
+          <select
+            id="priority"
+            name="priority"
+            value={values.priority}
+            onChange={handleChange}
+          >
+            {PRIORITIES.map((priority) => (
+              <option key={priority} value={priority}>
+                {PRIORITY_LABELS[priority]}
               </option>
             ))}
           </select>
