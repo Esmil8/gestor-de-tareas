@@ -8,6 +8,7 @@ function normalize(task) {
   return {
     ...task,
     priority: PRIORITIES.has(task.priority) ? task.priority : DEFAULT_PRIORITY,
+    dueDate: typeof task.dueDate === "string" ? task.dueDate : "",
   };
 }
 

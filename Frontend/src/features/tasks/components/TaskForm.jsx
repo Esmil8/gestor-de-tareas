@@ -6,6 +6,7 @@ const emptyTask = {
   description: "",
   status: "pendiente",
   priority: "media",
+  dueDate: "",
 };
 
 export default function TaskForm({ editingTask, onSubmit, onCancel }) {
@@ -20,6 +21,7 @@ export default function TaskForm({ editingTask, onSubmit, onCancel }) {
             description: editingTask.description,
             status: editingTask.status,
             priority: editingTask.priority || "media",
+            dueDate: editingTask.dueDate || "",
           }
         : emptyTask
     );
@@ -107,6 +109,17 @@ export default function TaskForm({ editingTask, onSubmit, onCancel }) {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="field">
+          <label htmlFor="dueDate">Fecha límite</label>
+          <input
+            id="dueDate"
+            name="dueDate"
+            type="date"
+            value={values.dueDate}
+            onChange={handleChange}
+          />
         </div>
 
         <div className="form-actions">
