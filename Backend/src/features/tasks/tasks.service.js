@@ -3,10 +3,20 @@ import { HttpError } from "../../shared/http-error.js";
 import {
   DEFAULT_PRIORITY,
   DEFAULT_STATUS,
+  DUE_DATE_PATTERN,
   PRIORITIES,
   STATUSES,
 } from "./tasks.constants.js";
 import * as repository from "./tasks.repository.js";
+
+function isValidDate(value) {
+  if (!DUE_DATE_PATTERN.test(value)) return false;
+
+  const date = new Date(`${value}T00:00:00Z`);
+  return (
+    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
+  );
+}
 
 function validate(body) {
   const title = typeof body?.title === "string" ? body.title.trim() : "";
@@ -14,6 +24,7 @@ function validate(body) {
     typeof body?.description === "string" ? body.description.trim() : "";
   const status = body?.status ?? DEFAULT_STATUS;
   const priority = body?.priority ?? DEFAULT_PRIORITY;
+  const dueDate = typeof body?.dueDate === "string" ? body.dueDate.trim() : "";
 
   if (!title) throw new HttpError(400, "El título es obligatorio.");
   if (title.length > 80) {
@@ -26,8 +37,11 @@ function validate(body) {
   if (!PRIORITIES.has(priority)) {
     throw new HttpError(400, "Prioridad no válida.");
   }
+  if (dueDate && !isValidDate(dueDate)) {
+    throw new HttpError(400, "Fecha límite no válida.");
+  }
 
-  return { title, description, status, priority };
+  return { title, description, status, priority, dueDate };
 }
 
 export function list() {

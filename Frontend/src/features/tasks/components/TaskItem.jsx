@@ -8,7 +8,25 @@ function formatDate(iso) {
   }).format(new Date(iso));
 }
 
+function formatDueDate(value) {
+  return new Intl.DateTimeFormat("es", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(`${value}T00:00:00`));
+}
+
+function isOverdue(task) {
+  if (!task.dueDate || task.status === "completada") return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(`${task.dueDate}T00:00:00`) < today;
+}
+
 export default function TaskItem({ task, onEdit, onDelete }) {
+  const overdue = isOverdue(task);
+
   return (
     <li className="task-card">
       <div className="task-body">
@@ -21,6 +39,12 @@ export default function TaskItem({ task, onEdit, onDelete }) {
           <span className={`priority priority--${task.priority || "media"}`}>
             Prioridad: {PRIORITY_LABELS[task.priority] || "Media"}
           </span>
+          {task.dueDate && (
+            <span className={`due-date${overdue ? " due-date--overdue" : ""}`}>
+              Vence: {formatDueDate(task.dueDate)}
+              {overdue ? " (atrasada)" : ""}
+            </span>
+          )}
           <span>Creada: {formatDate(task.createdAt)}</span>
         </div>
       </div>
