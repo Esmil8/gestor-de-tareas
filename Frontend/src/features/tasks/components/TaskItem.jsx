@@ -1,28 +1,9 @@
+import {
+  formatDate,
+  formatDueDate,
+  isOverdue,
+} from "../task-utils.js";
 import { PRIORITY_LABELS, STATUS_LABELS } from "../tasks.constants.js";
-
-function formatDate(iso) {
-  return new Intl.DateTimeFormat("es", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(iso));
-}
-
-function formatDueDate(value) {
-  return new Intl.DateTimeFormat("es", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(`${value}T00:00:00`));
-}
-
-function isOverdue(task) {
-  if (!task.dueDate || task.status === "completada") return false;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return new Date(`${task.dueDate}T00:00:00`) < today;
-}
 
 export default function TaskItem({ task, onEdit, onDelete }) {
   const overdue = isOverdue(task);

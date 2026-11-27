@@ -80,92 +80,94 @@ export default function TaskForm({ editingTask, onSubmit, onCancel }) {
       </h2>
 
       <form onSubmit={handleSubmit} noValidate>
-        <div className="field">
-          <label htmlFor="title">Título</label>
-          <input
-            id="title"
-            name="title"
-            type="text"
-            maxLength={80}
-            placeholder="Ej: Preparar informe"
-            value={values.title}
-            onChange={handleChange}
-            aria-invalid={Boolean(errors.title)}
-            required
-          />
-          {errors.title && (
-            <p className="form-error" role="alert">
-              {errors.title}
-            </p>
-          )}
-        </div>
+        <div className="form-grid">
+          <div className="field field--full">
+            <label htmlFor="title">Título</label>
+            <input
+              id="title"
+              name="title"
+              type="text"
+              maxLength={80}
+              placeholder="Ej: Preparar informe"
+              value={values.title}
+              onChange={handleChange}
+              aria-invalid={Boolean(errors.title)}
+              required
+            />
+            {errors.title && (
+              <p className="form-error" role="alert">
+                {errors.title}
+              </p>
+            )}
+          </div>
 
-        <div className="field">
-          <label htmlFor="description">Descripción</label>
-          <textarea
-            id="description"
-            name="description"
-            rows={3}
-            maxLength={300}
-            placeholder="Detalles de la tarea"
-            value={values.description}
-            onChange={handleChange}
-            aria-invalid={Boolean(errors.description)}
-          />
-          {errors.description && (
-            <p className="form-error" role="alert">
-              {errors.description}
-            </p>
-          )}
-        </div>
+          <div className="field field--full">
+            <label htmlFor="description">Descripción</label>
+            <textarea
+              id="description"
+              name="description"
+              rows={3}
+              maxLength={300}
+              placeholder="Detalles de la tarea"
+              value={values.description}
+              onChange={handleChange}
+              aria-invalid={Boolean(errors.description)}
+            />
+            {errors.description && (
+              <p className="form-error" role="alert">
+                {errors.description}
+              </p>
+            )}
+          </div>
 
-        <div className="field">
-          <label htmlFor="status">Estado</label>
-          <select
-            id="status"
-            name="status"
-            value={values.status}
-            onChange={handleChange}
-          >
-            {STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {STATUS_LABELS[status]}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div className="field">
+            <label htmlFor="status">Estado</label>
+            <select
+              id="status"
+              name="status"
+              value={values.status}
+              onChange={handleChange}
+            >
+              {STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {STATUS_LABELS[status]}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="field">
-          <label htmlFor="priority">Prioridad</label>
-          <select
-            id="priority"
-            name="priority"
-            value={values.priority}
-            onChange={handleChange}
-          >
-            {PRIORITIES.map((priority) => (
-              <option key={priority} value={priority}>
-                {PRIORITY_LABELS[priority]}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div className="field">
+            <label htmlFor="priority">Prioridad</label>
+            <select
+              id="priority"
+              name="priority"
+              value={values.priority}
+              onChange={handleChange}
+            >
+              {PRIORITIES.map((priority) => (
+                <option key={priority} value={priority}>
+                  {PRIORITY_LABELS[priority]}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="field">
-          <label htmlFor="dueDate">Fecha límite</label>
-          <input
-            id="dueDate"
-            name="dueDate"
-            type="date"
-            value={values.dueDate}
-            onChange={handleChange}
-            aria-invalid={Boolean(errors.dueDate)}
-          />
-          {errors.dueDate && (
-            <p className="form-error" role="alert">
-              {errors.dueDate}
-            </p>
-          )}
+          <div className="field">
+            <label htmlFor="dueDate">Fecha límite</label>
+            <input
+              id="dueDate"
+              name="dueDate"
+              type="date"
+              value={values.dueDate}
+              onChange={handleChange}
+              aria-invalid={Boolean(errors.dueDate)}
+            />
+            {errors.dueDate && (
+              <p className="form-error" role="alert">
+                {errors.dueDate}
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="form-actions">
