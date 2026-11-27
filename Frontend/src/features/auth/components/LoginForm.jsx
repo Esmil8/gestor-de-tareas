@@ -1,6 +1,6 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { login } from "../auth.api.js";
+import { login, register } from "../auth.api.js";
 
 function LockIcon() {
   return (
@@ -21,8 +21,15 @@ function LockIcon() {
 }
 
 export default function LoginForm({ onSuccess }) {
-  const [values, setValues] = useState({ username: "", password: "" });
+  const [mode, setMode] = useState("login");
+  const [values, setValues] = useState({
+    username: "",
+    password: "",
+    confirmation: "",
+  });
   const [errors, setErrors] = useState({});
+
+  const isRegister = mode === "register";
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -30,25 +37,49 @@ export default function LoginForm({ onSuccess }) {
     setErrors((current) => ({ ...current, [name]: "" }));
   }
 
+  function toggleMode() {
+    setMode(isRegister ? "login" : "register");
+    setErrors({});
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
 
     const nextErrors = {};
-    if (!values.username.trim()) nextErrors.username = "Escribe tu usuario.";
+    const username = values.username.trim();
+
+    if (!username) nextErrors.username = "Escribe tu usuario.";
+    else if (isRegister && username.length < 3) {
+      nextErrors.username = "El usuario debe tener al menos 3 caracteres.";
+    }
+
     if (!values.password) nextErrors.password = "Escribe tu contraseña.";
+    else if (isRegister && values.password.length < 8) {
+      nextErrors.password = "La contraseña debe tener al menos 8 caracteres.";
+    }
+
+    if (isRegister && values.password !== values.confirmation) {
+      nextErrors.confirmation = "Las contraseñas no coinciden.";
+    }
+
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
+    const payload = isRegister
+      ? {
+          username,
+          password: values.password,
+          confirmation: values.confirmation,
+        }
+      : { username, password: values.password };
+
     try {
       const data = await toast.promise(
-        login({
-          username: values.username.trim(),
-          password: values.password,
-        }),
+        isRegister ? register(payload) : login(payload),
         {
-          loading: "Iniciando sesión...",
-          success: "Sesión iniciada.",
-          error: (err) => err.message || "No se pudo iniciar sesión.",
+          loading: isRegister ? "Creando cuenta..." : "Iniciando sesión...",
+          success: isRegister ? "Cuenta creada." : "Sesión iniciada.",
+          error: (err) => err.message || "No se pudo continuar.",
         }
       );
       onSuccess(data.user);
@@ -72,12 +103,18 @@ export default function LoginForm({ onSuccess }) {
         </p>
       </section>
 
-      <section className="auth-card" aria-labelledby="login-title">
+      <section className="auth-card" aria-labelledby="auth-title">
         <span className="auth-card-icon">
           <LockIcon />
         </span>
-        <h2 id="login-title">Iniciar sesión</h2>
-        <p className="auth-subtitle">Accede al panel de tareas.</p>
+        <h2 id="auth-title">
+          {isRegister ? "Crear cuenta" : "Iniciar sesión"}
+        </h2>
+        <p className="auth-subtitle">
+          {isRegister
+            ? "Regístrate para usar el panel de tareas."
+            : "Accede al panel de tareas."}
+        </p>
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="field">
@@ -106,7 +143,7 @@ export default function LoginForm({ onSuccess }) {
               id="password"
               name="password"
               type="password"
-              autoComplete="current-password"
+              autoComplete={isRegister ? "new-password" : "current-password"}
               placeholder="Tu contraseña"
               value={values.password}
               onChange={handleChange}
@@ -120,10 +157,39 @@ export default function LoginForm({ onSuccess }) {
             )}
           </div>
 
+          {isRegister && (
+            <div className="field">
+              <label htmlFor="confirmation">Confirmar contraseña</label>
+              <input
+                id="confirmation"
+                name="confirmation"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Repite tu contraseña"
+                value={values.confirmation}
+                onChange={handleChange}
+                aria-invalid={Boolean(errors.confirmation)}
+                required
+              />
+              {errors.confirmation && (
+                <p className="form-error" role="alert">
+                  {errors.confirmation}
+                </p>
+              )}
+            </div>
+          )}
+
           <button className="btn btn-primary auth-submit" type="submit">
-            Entrar
+            {isRegister ? "Crear cuenta" : "Entrar"}
           </button>
         </form>
+
+        <p className="auth-switch">
+          {isRegister ? "¿Ya tienes cuenta?" : "¿No tienes cuenta?"}
+          <button type="button" onClick={toggleMode}>
+            {isRegister ? "Inicia sesión" : "Regístrate"}
+          </button>
+        </p>
       </section>
     </div>
   );

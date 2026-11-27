@@ -17,6 +17,13 @@ async function request(path, options = {}) {
   return response.status === 204 ? null : response.json();
 }
 
+export function register(credentials) {
+  return request("/register", {
+    method: "POST",
+    body: JSON.stringify(credentials),
+  });
+}
+
 export function login(credentials) {
   return request("/login", {
     method: "POST",

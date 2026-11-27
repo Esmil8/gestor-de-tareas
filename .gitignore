@@ -1,4 +1,5 @@
 node_modules/
 dist/
 **/data/tasks.json
+**/data/users.json
 .DS_Store

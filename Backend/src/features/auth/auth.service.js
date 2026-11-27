@@ -1,27 +1,64 @@
+import { createHmac, scryptSync, timingSafeEqual } from "node:crypto";
 import {
-  createHmac,
-  randomBytes,
-  scryptSync,
-  timingSafeEqual,
-} from "node:crypto";
-import { PASSWORD, SECRET, SESSION_HOURS, USERNAME } from "./auth.constants.js";
+  MIN_PASSWORD_LENGTH,
+  SECRET,
+  SESSION_HOURS,
+} from "./auth.constants.js";
+import { addUser, findUser, hashPassword } from "./auth.store.js";
 
-const salt = randomBytes(16);
-const passwordHash = scryptSync(PASSWORD, salt, 64);
+export function validateRegistration(username, password, confirmation) {
+  const errors = {};
+  const cleanUsername = typeof username === "string" ? username.trim() : "";
+
+  if (cleanUsername.length < 3) {
+    errors.username = "El usuario debe tener al menos 3 caracteres.";
+  } else if (!/^[a-zA-Z0-9._-]+$/.test(cleanUsername)) {
+    errors.username = "Usa solo letras, números, punto, guion o guion bajo.";
+  }
+
+  if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
+    errors.password = `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`;
+  } else if (password.length > 200) {
+    errors.password = "La contraseña es demasiado larga.";
+  }
+
+  if (password !== confirmation) {
+    errors.confirmation = "Las contraseñas no coinciden.";
+  }
+
+  return { errors, username: cleanUsername };
+}
+
+export function registerUser(username, password) {
+  if (findUser(username)) {
+    const error = new Error("Ese usuario ya está registrado.");
+    error.status = 409;
+    throw error;
+  }
+
+  return addUser({ username: username.trim(), ...hashPassword(password) });
+}
 
 export function verifyCredentials(username, password) {
   if (typeof username !== "string" || typeof password !== "string") return false;
-  if (username.trim().toLowerCase() !== USERNAME.toLowerCase()) return false;
   if (password.length > 200) return false;
 
-  const inputHash = scryptSync(password, salt, 64);
-  return timingSafeEqual(passwordHash, inputHash);
+  const user = findUser(username);
+  if (!user) return false;
+
+  const inputHash = scryptSync(password, user.salt, 64);
+  const storedHash = Buffer.from(user.hash, "hex");
+
+  return (
+    storedHash.length === inputHash.length &&
+    timingSafeEqual(storedHash, inputHash)
+  );
 }
 
-export function createSession() {
+export function createSession(username) {
   const expiresAt = Date.now() + SESSION_HOURS * 60 * 60 * 1000;
   const payload = Buffer.from(
-    JSON.stringify({ user: USERNAME, expiresAt })
+    JSON.stringify({ user: username, expiresAt })
   ).toString("base64url");
   const signature = createHmac("sha256", SECRET)
     .update(payload)
@@ -48,7 +85,7 @@ export function readSession(token) {
 
   try {
     const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
-    if (data.user !== USERNAME || data.expiresAt < Date.now()) return null;
+    if (data.expiresAt < Date.now() || !findUser(data.user)) return null;
     return data;
   } catch {
     return null;
