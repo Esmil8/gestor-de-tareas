@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import TaskForm from "./features/tasks/components/TaskForm.jsx";
 import TaskList from "./features/tasks/components/TaskList.jsx";
 import { isOverdue } from "./features/tasks/task-utils.js";
@@ -127,32 +128,99 @@ export default function App() {
   const activeLabel =
     VIEWS.find((view) => view.id === activeView)?.label ?? "Todas";
 
-  async function handleSubmit(values) {
+  async function applyMutation(mutation, messages) {
     try {
-      setError("");
-      if (editingTask) {
-        await updateTask(editingTask.id, values);
-      } else {
-        await createTask(values);
-      }
-      setTasks(await getTasks());
-      setEditingTask(null);
-    } catch (err) {
-      setError(err.message);
+      const list = await toast.promise(
+        mutation.then(() => getTasks()),
+        messages
+      );
+      setTasks(list);
+      return true;
+    } catch {
+      return false;
     }
   }
 
-  async function handleDelete(task) {
-    if (!window.confirm(`¿Eliminar la tarea "${task.title}"?`)) return;
+  async function handleSubmit(values) {
+    const editing = Boolean(editingTask);
+    const saved = await applyMutation(
+      editing ? updateTask(editingTask.id, values) : createTask(values),
+      {
+        loading: editing ? "Actualizando tarea..." : "Guardando tarea...",
+        success: editing ? "Tarea actualizada." : "Tarea creada.",
+        error: (err) => err.message || "No se pudo guardar la tarea.",
+      }
+    );
 
-    try {
-      setError("");
-      await deleteTask(task.id);
-      setTasks(await getTasks());
-      if (editingTask?.id === task.id) setEditingTask(null);
-    } catch (err) {
-      setError(err.message);
-    }
+    if (saved) setEditingTask(null);
+  }
+
+  function confirmDelete(task) {
+    return new Promise((resolve) => {
+      let toastId;
+
+      toastId = toast.custom(
+        (t) => (
+          <div
+            className={`confirm-toast${t.visible ? " confirm-toast--visible" : ""}`}
+            role="alertdialog"
+            aria-labelledby="confirm-title"
+            aria-describedby="confirm-description"
+          >
+            <span className="confirm-toast-icon">
+              <Icon name="alert" />
+            </span>
+
+            <div className="confirm-toast-copy">
+              <strong id="confirm-title">Eliminar tarea</strong>
+              <p id="confirm-description">
+                ¿Eliminar "{task.title}"? Esta acción no se puede deshacer.
+              </p>
+            </div>
+
+            <div className="confirm-toast-actions">
+              <button
+                className="btn btn-ghost"
+                type="button"
+                autoFocus
+                onClick={() => {
+                  toast.dismiss(toastId);
+                  resolve(false);
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn btn-danger"
+                type="button"
+                onClick={() => {
+                  toast.dismiss(toastId);
+                  resolve(true);
+                }}
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        ),
+        {
+          duration: Infinity,
+          ariaProps: { role: "alertdialog", "aria-live": "assertive" },
+        }
+      );
+    });
+  }
+
+  async function handleDelete(task) {
+    if (!(await confirmDelete(task))) return;
+
+    const deleted = await applyMutation(deleteTask(task.id), {
+      loading: "Eliminando tarea...",
+      success: "Tarea eliminada.",
+      error: (err) => err.message || "No se pudo eliminar la tarea.",
+    });
+
+    if (deleted && editingTask?.id === task.id) setEditingTask(null);
   }
 
   return (
@@ -260,6 +328,35 @@ export default function App() {
           </section>
         </main>
       </div>
+
+      <Toaster
+        position="top-right"
+        gutter={10}
+        toastOptions={{
+          duration: 3200,
+          className: "app-toast",
+          style: {
+            background: "#ffffff",
+            color: "#172033",
+            border: "1px solid #e2e7f0",
+            borderRadius: "12px",
+            boxShadow: "0 14px 34px rgba(23, 32, 51, 0.12)",
+            padding: "12px 14px",
+            fontFamily: "inherit",
+            fontSize: "0.9rem",
+            fontWeight: 600,
+          },
+          loading: {
+            iconTheme: { primary: "#2f5fe0", secondary: "#ffffff" },
+          },
+          success: {
+            iconTheme: { primary: "#1e7145", secondary: "#ffffff" },
+          },
+          error: {
+            iconTheme: { primary: "#bb2f3b", secondary: "#ffffff" },
+          },
+        }}
+      />
     </div>
   );
 }
