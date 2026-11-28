@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import { getSession, logout } from "./features/auth/auth.api.js";
+import LoginForm from "./features/auth/components/LoginForm.jsx";
 import TaskForm from "./features/tasks/components/TaskForm.jsx";
 import TaskList from "./features/tasks/components/TaskList.jsx";
 import { isOverdue } from "./features/tasks/task-utils.js";
@@ -56,6 +58,35 @@ const todayLabel = new Intl.DateTimeFormat("es", {
   month: "long",
 }).format(new Date());
 
+const toasterOptions = {
+  position: "top-right",
+  gutter: 10,
+  toastOptions: {
+    duration: 3200,
+    className: "app-toast",
+    style: {
+      background: "#ffffff",
+      color: "#172033",
+      border: "1px solid #e2e7f0",
+      borderRadius: "12px",
+      boxShadow: "0 14px 34px rgba(23, 32, 51, 0.12)",
+      padding: "12px 14px",
+      fontFamily: "inherit",
+      fontSize: "0.9rem",
+      fontWeight: 600,
+    },
+    loading: {
+      iconTheme: { primary: "#2f5fe0", secondary: "#ffffff" },
+    },
+    success: {
+      iconTheme: { primary: "#1e7145", secondary: "#ffffff" },
+    },
+    error: {
+      iconTheme: { primary: "#bb2f3b", secondary: "#ffffff" },
+    },
+  },
+};
+
 function Icon({ name }) {
   return (
     <svg
@@ -80,16 +111,46 @@ export default function App() {
   const [editingTask, setEditingTask] = useState(null);
   const [query, setQuery] = useState("");
   const [activeView, setActiveView] = useState("todas");
+  const [user, setUser] = useState(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
+
+    getSession()
+      .then((data) => {
+        if (active) setUser(data.user);
+      })
+      .catch(() => {
+        if (active) setUser(null);
+      })
+      .finally(() => {
+        if (active) setSessionLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let active = true;
+    setLoading(true);
+    setError("");
 
     getTasks()
       .then((data) => {
         if (active) setTasks(data);
       })
       .catch((err) => {
-        if (active) setError(err.message);
+        if (!active) return;
+        if (err.status === 401) {
+          setUser(null);
+          return;
+        }
+        setError(err.message);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -98,7 +159,7 @@ export default function App() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [user]);
 
   const counts = useMemo(
     () => ({
@@ -223,6 +284,41 @@ export default function App() {
     if (deleted && editingTask?.id === task.id) setEditingTask(null);
   }
 
+  async function handleLogout() {
+    try {
+      await toast.promise(logout(), {
+        loading: "Cerrando sesión...",
+        success: "Sesión cerrada.",
+        error: (err) => err.message || "No se pudo cerrar sesión.",
+      });
+      setUser(null);
+      setTasks([]);
+      setEditingTask(null);
+      setQuery("");
+      setActiveView("todas");
+    } catch {
+      return;
+    }
+  }
+
+  if (sessionLoading) {
+    return (
+      <div className="auth-loading">
+        <p>Verificando sesión...</p>
+        <Toaster {...toasterOptions} />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <LoginForm onSuccess={setUser} />
+        <Toaster {...toasterOptions} />
+      </>
+    );
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -256,12 +352,21 @@ export default function App() {
           </ul>
         </nav>
 
-        <div className="sidebar-footer">
-          <span className="footer-dot" />
-          <div>
-            <strong>Datos locales</strong>
-            <span>Guardados en el servidor</span>
+        <div className="sidebar-account">
+          <div className="sidebar-footer">
+            <span className="footer-dot" />
+            <div>
+              <strong>{user.username}</strong>
+              <span>Sesión activa</span>
+            </div>
           </div>
+          <button
+            className="btn btn-ghost btn-block"
+            type="button"
+            onClick={handleLogout}
+          >
+            Cerrar sesión
+          </button>
         </div>
       </aside>
 
@@ -329,34 +434,7 @@ export default function App() {
         </main>
       </div>
 
-      <Toaster
-        position="top-right"
-        gutter={10}
-        toastOptions={{
-          duration: 3200,
-          className: "app-toast",
-          style: {
-            background: "#ffffff",
-            color: "#172033",
-            border: "1px solid #e2e7f0",
-            borderRadius: "12px",
-            boxShadow: "0 14px 34px rgba(23, 32, 51, 0.12)",
-            padding: "12px 14px",
-            fontFamily: "inherit",
-            fontSize: "0.9rem",
-            fontWeight: 600,
-          },
-          loading: {
-            iconTheme: { primary: "#2f5fe0", secondary: "#ffffff" },
-          },
-          success: {
-            iconTheme: { primary: "#1e7145", secondary: "#ffffff" },
-          },
-          error: {
-            iconTheme: { primary: "#bb2f3b", secondary: "#ffffff" },
-          },
-        }}
-      />
+      <Toaster {...toasterOptions} />
     </div>
   );
 }
