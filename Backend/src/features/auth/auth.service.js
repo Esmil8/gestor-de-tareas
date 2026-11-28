@@ -6,14 +6,18 @@ import {
 } from "./auth.constants.js";
 import { addUser, findUser, hashPassword } from "./auth.store.js";
 
+const USERNAME_PATTERN = /^[\p{L}\p{N}._-]+$/u;
+const USERNAME_ERROR =
+  "El usuario no puede tener espacios ni símbolos. Usa letras, números, punto (.), guion (-) o guion bajo (_). Ejemplo: maria.garcia_12.";
+
 export function validateRegistration(username, password, confirmation) {
   const errors = {};
   const cleanUsername = typeof username === "string" ? username.trim() : "";
 
   if (cleanUsername.length < 3) {
     errors.username = "El usuario debe tener al menos 3 caracteres.";
-  } else if (!/^[a-zA-Z0-9._-]+$/.test(cleanUsername)) {
-    errors.username = "Usa solo letras, números, punto, guion o guion bajo.";
+  } else if (!USERNAME_PATTERN.test(cleanUsername)) {
+    errors.username = USERNAME_ERROR;
   }
 
   if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
