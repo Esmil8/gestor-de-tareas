@@ -2,6 +2,10 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { login, register } from "../auth.api.js";
 
+const USERNAME_PATTERN = /^[\p{L}\p{N}._-]+$/u;
+const USERNAME_ERROR =
+  "El usuario no puede tener espacios ni símbolos. Usa letras, números, punto (.), guion (-) o guion bajo (_). Ejemplo: maria.garcia_12.";
+
 function LockIcon() {
   return (
     <svg
@@ -51,6 +55,8 @@ export default function LoginForm({ onSuccess }) {
     if (!username) nextErrors.username = "Escribe tu usuario.";
     else if (isRegister && username.length < 3) {
       nextErrors.username = "El usuario debe tener al menos 3 caracteres.";
+    } else if (isRegister && !USERNAME_PATTERN.test(username)) {
+      nextErrors.username = USERNAME_ERROR;
     }
 
     if (!values.password) nextErrors.password = "Escribe tu contraseña.";
